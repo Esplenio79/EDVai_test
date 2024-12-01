@@ -295,32 +295,34 @@ only showing top 10 rows
 
 >>> df_2.printSchema()
 root
- |-- aeropuerto: string (nullable = true)
- |-- oac: string (nullable = true)
- |-- iata: string (nullable = true)
- |-- tipo: string (nullable = true)
- |-- denominacion: string (nullable = true)
- |-- coordenadas: string (nullable = true)
- |-- latitud: string (nullable = true)
- |-- longitud: string (nullable = true)
- |-- elev: float (nullable = true)
- |-- uom_elev: string (nullable = true)
- |-- ref: string (nullable = true)
- |-- distancia_ref: float (nullable = true)
- |-- direccion_ref: string (nullable = true)
- |-- condicion: string (nullable = true)
- |-- control: string (nullable = true)
- |-- region: string (nullable = true)
- |-- uso: string (nullable = true)
- |-- trafico: string (nullable = true)
- |-- sna: string (nullable = true)
- |-- concesionado: string (nullable = true)
- |-- provincia: string (nullable = true)
+ 
 
 ##Creamos una vista de esa nueva tabla
 >>> df_2.createOrReplaceTempView("df2_v")
 
 
-df_cast_nombres = spark.sql("""SELECT CAST(fecha AS DATE) AS fecha, CAST(Hora_UTC AS STRING) AS hora_UTC, CAST("Clase de Vuelo (todos los vuelos)" AS STRING) AS clase_de_vuelo,CAST(Clasificación_Vuelo AS STRING) AS clasificacion_de_vuelo, CAST(Tipo_de_Movimiento AS STRING) AS tipo_de_movimiento, CAST(Aeropuerto AS STRING) AS aeropuerto, CAST("Origen / Destino" AS STRING) AS origen_destino, CAST(Aerolinea_Nombre AS STRING) AS aerolinea_nombre, CAST(Aeronave AS STRING) AS aeronave, CAST(pasajeros AS INT) AS pasajeros FROM df_2122_cast_v""")
+##En Hive ya tenemos creada la base de datos examen_final, y ahora creamos la tabla aeropuerto_detalles_tabla
+
+hive> CREATE EXTERNAL TABLE IF NOT EXISTS examen_final.aeropuerto_detalles_tabla (aeropuerto string, oac string, iata string, tipo string, denominacion string, coordenadas string, latitud string, longitud string, elev float, uom_elev string, ref string, distancia_ref float, direccion_ref string, condicion string, control string, region string, uso string, trafico string, sna string, concesionado string, provincia string)
+    > row format delimited
+    > fields terminated by ','
+    > location '/tables/external/examen_final';
+OK
+Time taken: 1.735 seconds
+
+##Vuelvo a spark, y envío la vista del df a hive
+
+>>> spark.sql("insert into examen_final.aeropuerto_detalles_tabla select * from df2_v")
+
+
+-- Para la tabla aeropuerto_tabla
+ALTER TABLE examen_final.aeropuerto_tabla
+  SET pasajeros = 0
+  WHERE pasajeros IS NULL;
+
+-- Para la tabla aeropuerto_detalles_tabla
+ALTER TABLE examen_final.aeropuerto_detalles_tabla
+  SET distancia_ref = 0
+  WHERE distancia_ref IS NULL;
 
 
