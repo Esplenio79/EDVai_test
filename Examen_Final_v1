@@ -315,6 +315,12 @@ Time taken: 1.735 seconds
 >>> spark.sql("insert into examen_final.aeropuerto_detalles_tabla select * from df2_v")
 
 
+###Vuelvo a cargar el primer schema, y a realizar ahi el no null de la columna pasajeros, despues se pasa a hive,
+Lo mismo queda por hacer con el schema2, y pasarlo a hive. ya lo haré mañana.
+Copio el crudo de lo hecho, para que no se pierda:
+
+Se repite de linea 3 a 137
+
 -- Para la tabla aeropuerto_tabla
 ALTER TABLE examen_final.aeropuerto_tabla
   SET pasajeros = 0
