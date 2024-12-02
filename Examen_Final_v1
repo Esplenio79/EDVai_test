@@ -320,6 +320,13 @@ Lo mismo queda por hacer con el schema2, y pasarlo a hive. ya lo haré mañana.
 Copio el crudo de lo hecho, para que no se pierda:
 
 Se repite de linea 3 a 137
+Despues se corre una sentencia para eliminar los No null de la columba pasajeros.
+
+>>> from pyspark.sql import functions as F
+>>> df_cast_nombres_nonull = df_cast_nombres.fillna(0, subset=['pasajeros'])
+>>> df_cast_nombres_nonull.printSchema()
+
+Quedaria por eliminar el contenido de la tabla en HIVE, y volver a cargar este nuevo df-
 
 -- Para la tabla aeropuerto_tabla
 ALTER TABLE examen_final.aeropuerto_tabla
