@@ -68,6 +68,42 @@ root
 ##Creamos una vista de esa nueva tabla
 >>> df_2122.createOrReplaceTempView("df_2122_v")
 
+/////////Edito el 24 de Noviembre////
+# Normalizaciones para evitar “falsos negativos”
+df_norm = (df_2122
+    .withColumn("clasificacion_de_vuelo_norm",
+                F.upper(F.regexp_replace(F.col("Clasificación Vuelo"), "[ÁÉÍÓÚ]", "A|E|I|O|U")))
+    .withColumn("clase_de_vuelo_norm",
+                F.upper(F.regexp_replace(F.col("Clase de Vuelo (todos los vuelos)"), "[ÁÉÍÓÚ]", "A|E|I|O|U")))
+    .withColumn("fecha", F.to_date(F.col("Fecha"), "dd/MM/yyyy"))
+    .withColumn("pasajeros", F.col("Pasajeros").cast("int"))
+)
+
+# Criterio para "DOMESTICO" (evita variantes/acentos/espacios)
+>>> df_dom = df_norm.filter(
+DOMESTICO","DOME...     F.trim(F.col("clasificacion_de_vuelo_norm")).isin("DOMESTICO","DOMESTICO ") |
+(F.trim(F.col("c...     (F.trim(F.col("clase_de_vuelo_norm")) == "REGULAR") & (F.trim(F.col("clasificacion_de_vuelo_norm")) == "DOMESTICO")
+... ).select(
+...     "fecha",
+...     F.col("Hora UTC").alias("hora_utc"),
+...     F.col("Clase de Vuelo (todos los vuelos)").alias("clase_de_vuelo"),
+...     F.col("Clasificación Vuelo").alias("clasificacion_de_vuelo"),
+...     F.col("Tipo de Movimiento").alias("tipo_de_movimiento"),
+erto"),
+    F.col("Origen / Dest...     F.col("Aeropuerto").alias("aeropuerto"),
+...     F.col("Origen / Destino").alias("origen_destino"),
+...     F.col("Aerolinea Nombre").alias("aerolinea_nombre"),
+...     F.col("Aeronave").alias("aeronave"),
+...     "pasajeros"
+... )
+
+# Ventana temporal pedida (2021-01-01 a 2022-06-30)
+df_dom_win = df_dom.filter((F.col("fecha") >= F.lit("2021-01-01")) & (F.col("fecha") <= F.lit("2022-06-30")))
+
+
+////// fin de la edicion /////
+
+
 ##Casteamos y verificamos los cambios con printSchema y show
 >>> from pyspark.sql.functions import to_date, col
 >>> df_2122_cast = df_2122.withColumn("fecha", to_date(col("fecha"), "dd/MM/yyyy")).withColumn("pasajeros", col("pasajeros").cast("int"))
@@ -145,6 +181,10 @@ only showing top 2 rows
 ##Generamos la vista filtrada segun solicitud punto 3
 >>>> df_2122_filter = spark.sql("select * from df_2122_cast_v_final where fecha >= '2021-01-01' and fecha <= '2022-06-30'")
 
+
+## ///// 24/11/2025
+ df_dom_win.createOrReplaceTempView("df_2122_cast_final")
+
 ##Verificamos 
 >>> df_2122_filter.show()
 
@@ -176,6 +216,9 @@ only showing top 20 rows
 
 ##Creamos la vista fitrada para usar en Hive
 >>> df_2122_filter.createOrReplaceTempView("df_2122_cast_final")
+
+##24/11
+>>> df_dom_win.createOrReplaceTempView("df_2122_cast_final")
 
 ##Chequeamos la vista realizada
 >>> spark.sql("DESCRIBE df_2122_cast_final").show()
